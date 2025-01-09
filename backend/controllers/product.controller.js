@@ -1,63 +1,106 @@
 import mongoose from "mongoose";
-import Product from "../models/product.model.js";
+import Car from "../models/product.model.js";
 
-export const getProducts = async (req, res) => {
-	try {
-		const products = await Product.find({});
-		res.status(200).json({ success: true, data: products });
-	} catch (error) {
-		console.log("error in fetching products:", error.message);
-		res.status(500).json({ success: false, message: "Server Error" });
-	}
+// Get all cars
+export const getCars = async (req, res) => {
+  try {
+    const cars = await Car.find({});
+    res.status(200).json({ success: true, data: cars });
+  } catch (error) {
+    console.error("Error in fetching cars:", error.message);
+    res.status(500).json({ success: false, message: "Server Error" });
+  }
 };
 
-export const createProduct = async (req, res) => {
-	const product = req.body; // user will send this data
+// Create a new car
+export const createCar = async (req, res) => {
+  const {
+    make,
+    model,
+    year,
+    price,
+    mileage,
+    image,
+    color,
+    description,
+    fuelType,
+    transmission,
+    condition,
+    location,
+    sellerContact,
+  } = req.body; // User will send this data
 
-	if (!product.name || !product.price || !product.image) {
-		return res.status(400).json({ success: false, message: "Please provide all fields" });
-	}
+  // Validate required fields
+  if (!make || !model || !year || !price || !mileage || !image) {
+    return res
+      .status(400)
+      .json({ success: false, message: "Please provide all required fields" });
+  }
 
-	const newProduct = new Product(product);
+  const newCar = new Car({
+    make,
+    model,
+    year,
+    price,
+    mileage,
+    image,
+    color,
+    description,
+    fuelType,
+    transmission,
+    condition,
+    location,
+    sellerContact,
+  });
 
-	try {
-		await newProduct.save();
-		res.status(201).json({ success: true, data: newProduct });
-	} catch (error) {
-		console.error("Error in Create product:", error.message);
-		res.status(500).json({ success: false, message: "Server Error" });
-	}
+  try {
+    await newCar.save();
+    res.status(201).json({ success: true, data: newCar });
+  } catch (error) {
+    console.error("Error in creating car:", error.message);
+    res.status(500).json({ success: false, message: "Server Error" });
+  }
 };
 
-export const updateProduct = async (req, res) => {
-	const { id } = req.params;
+// Update a car
+export const updateCar = async (req, res) => {
+  const { id } = req.params;
+  const updatedData = req.body;
 
-	const product = req.body;
+  if (!mongoose.Types.ObjectId.isValid(id)) {
+    return res.status(404).json({ success: false, message: "Invalid Car ID" });
+  }
 
-	if (!mongoose.Types.ObjectId.isValid(id)) {
-		return res.status(404).json({ success: false, message: "Invalid Product Id" });
-	}
-
-	try {
-		const updatedProduct = await Product.findByIdAndUpdate(id, product, { new: true });
-		res.status(200).json({ success: true, data: updatedProduct });
-	} catch (error) {
-		res.status(500).json({ success: false, message: "Server Error" });
-	}
+  try {
+    const updatedCar = await Car.findByIdAndUpdate(id, updatedData, {
+      new: true,
+    });
+    if (!updatedCar) {
+      return res.status(404).json({ success: false, message: "Car not found" });
+    }
+    res.status(200).json({ success: true, data: updatedCar });
+  } catch (error) {
+    console.error("Error in updating car:", error.message);
+    res.status(500).json({ success: false, message: "Server Error" });
+  }
 };
 
-export const deleteProduct = async (req, res) => {
-	const { id } = req.params;
+// Delete a car
+export const deleteCar = async (req, res) => {
+  const { id } = req.params;
 
-	if (!mongoose.Types.ObjectId.isValid(id)) {
-		return res.status(404).json({ success: false, message: "Invalid Product Id" });
-	}
+  if (!mongoose.Types.ObjectId.isValid(id)) {
+    return res.status(404).json({ success: false, message: "Invalid Car ID" });
+  }
 
-	try {
-		await Product.findByIdAndDelete(id);
-		res.status(200).json({ success: true, message: "Product deleted" });
-	} catch (error) {
-		console.log("error in deleting product:", error.message);
-		res.status(500).json({ success: false, message: "Server Error" });
-	}
+  try {
+    const deletedCar = await Car.findByIdAndDelete(id);
+    if (!deletedCar) {
+      return res.status(404).json({ success: false, message: "Car not found" });
+    }
+    res.status(200).json({ success: true, message: "Car deleted successfully" });
+  } catch (error) {
+    console.error("Error in deleting car:", error.message);
+    res.status(500).json({ success: false, message: "Server Error" });
+  }
 };
